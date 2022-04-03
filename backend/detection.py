@@ -4,6 +4,7 @@ import keys
 
 FACE_API_KEY = keys.FACE_API_KEY
 FACE_API_ENDPOINT = keys.FACE_API_ENDPOINT
+FACE_API_ENDPOINT_VERIFY = keys.FACE_API_ENDPOINT_VERIFY
 
 
 class TooManyFacesException(Exception):
@@ -49,7 +50,7 @@ class AzureRequestSender:
     def __init__(self, params):
         self.params = params
 
-    def send_request_to_azure(self, image):
+    def send_image_request_to_azure(self, image):
         headers = {
             'Content-Type': 'application/octet-stream',
             'Ocp-Apim-Subscription-Key': FACE_API_KEY,
@@ -62,7 +63,7 @@ class AzureRequestSender:
 
     def detect_face(self, image):
         try:
-            response = self.send_request_to_azure(image)
+            response = self.send_image_request_to_azure(image)
         except KeyError:
             raise ServerNotRespondingException
         else:
@@ -74,3 +75,18 @@ class AzureRequestSender:
             if check_if_face_blurred(response_json):
                 raise BlurredFaceException
             return response_json[0]
+
+    @staticmethod
+    def compare_faces(face1_id, face2_id):
+        headers = {
+            'Content-Type': 'application/json',
+            'Ocp-Apim-Subscription-Key': FACE_API_KEY,
+        }
+        body = {"faceId1": face1_id, "faceId2": face2_id}
+
+        params = {}
+        response = requests.post(FACE_API_ENDPOINT_VERIFY,
+                                 params=params,
+                                 headers=headers,
+                                 json=body)
+        return response.json()
