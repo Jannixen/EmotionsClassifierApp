@@ -1,6 +1,8 @@
+import keras
 import requests
-
+from keras.preprocessing.image import img_to_array
 import keys
+import cv2
 
 FACE_API_KEY = keys.FACE_API_KEY
 FACE_API_ENDPOINT = keys.FACE_API_ENDPOINT
@@ -90,3 +92,17 @@ class AzureRequestSender:
                                  headers=headers,
                                  json=body)
         return response.json()
+
+
+class KerasEmotionModelConnector:
+
+    def __init__(self, model_path):
+        self.model = keras.models.load_model(model_path)
+
+    def detect_emotion(self, img):
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img_for_pred = cv2.resize(gray, (48, 48), interpolation=cv2.INTER_CUBIC)
+        img_for_pred = img_for_pred.reshape(-1, 48, 48)
+        prediction = self.model.predict([img_for_pred])
+        return prediction
+
